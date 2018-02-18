@@ -1,4 +1,4 @@
-package disposable
+package gorx
 
 
 type Disposable interface {
@@ -9,3 +9,4 @@ type Disposable interface {
 type Disposed interface {
 	IsDisposed() bool
 }
+

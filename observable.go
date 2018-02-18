@@ -1,11 +1,13 @@
 package gorx
 
-import "github.com/venth/gorx/disposable"
-
 type ObservableSource interface{
-	Subscribe(observer Observer) ObservedSource
+	Subscribe(observer Observer) Subscription
 }
 
-type ObservedSource interface {
-	disposable.Disposable
+type Observable interface {
+	ObservableSource
+}
+
+type Subscription interface {
+	Disposable
 }
