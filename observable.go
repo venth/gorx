@@ -7,7 +7,3 @@ type ObservableSource interface{
 type Observable interface {
 	ObservableSource
 }
-
-type Subscription interface {
-	Disposable
-}
