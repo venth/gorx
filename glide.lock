@@ -1,7 +1,17 @@
-hash: 7825257cf97303eac51612b92fd0255161847fe95b7c0eba93d3341ad41645ce
-updated: 2018-02-18T13:22:19.71491+01:00
-imports: []
+hash: dc1de08c6f6114490d33bb4d652590c5f274da45e0cfd20e8396835cbba948e4
+updated: 2018-02-18T20:20:35.029354+01:00
+imports:
+- name: golang.org/x/net
+  version: 136a25c244d3019482a795d728110278d6ba09a4
+  subpackages:
+  - html
+  - html/atom
+  - html/charset
 testImports:
+- name: github.com/golang/mock
+  version: 13f360950a79f5864a972c786a10a50e44b69541
+  subpackages:
+  - mockgen
 - name: github.com/onsi/ginkgo
   version: 9eda700730cba42af70d53180f9dcce9266bc2bc
   subpackages:
@@ -36,12 +46,6 @@ testImports:
   - matchers/support/goraph/node
   - matchers/support/goraph/util
   - types
-- name: golang.org/x/net
-  version: 136a25c244d3019482a795d728110278d6ba09a4
-  subpackages:
-  - html
-  - html/atom
-  - html/charset
 - name: golang.org/x/sys
   version: 37707fdb30a5b38865cfb95e5aab41707daec7fd
   subpackages:

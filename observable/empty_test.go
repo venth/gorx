@@ -17,7 +17,7 @@ func TestObservable(t *testing.T) {
 var _ = Describe("Observable", func() {
 	var ob gorx.Observable
 
-	Context("a fresh one", func() {
+	Context("which is a fresh one", func() {
 		It("creates empty observable", func() {
 			ob = Empty()
 
@@ -25,10 +25,38 @@ var _ = Describe("Observable", func() {
 		})
 	})
 
+	Context("which is an empty one", func() {
+
+		It("emits no elements", func() {
+			empty := Empty()
+			observer := observer.NewTestObserver()
+
+			empty.Subscribe(observer)
+
+			Expect(observer.ElementsCount()).Should(BeZero())
+		})
+		It("emits no errors", func() {
+			empty := Empty()
+			observer := observer.NewTestObserver()
+
+			empty.Subscribe(observer)
+
+			Expect(observer.HasError()).Should(BeFalse())
+		})
+		It("completes after subscription", func() {
+			empty := Empty()
+			observer := observer.NewTestObserver()
+
+			empty.Subscribe(observer)
+
+			Expect(observer.Completed()).Should(BeTrue())
+		})
+	})
+
 	Context("with subscribed observer", func() {
 		It("returns subscription after observer subscribe itself", func() {
 			ob = Empty()
-			someObserver := observer.TestObserver()
+			someObserver := observer.NewTestObserver()
 
 			subscription := ob.Subscribe(someObserver)
 
@@ -37,7 +65,7 @@ var _ = Describe("Observable", func() {
 
 		It("returns not disposed subscription", func() {
 			ob = Empty()
-			someObserver := observer.TestObserver()
+			someObserver := observer.NewTestObserver()
 
 			subscription := ob.Subscribe(someObserver)
 
@@ -46,7 +74,7 @@ var _ = Describe("Observable", func() {
 
 		It("disposes subscription", func() {
 			ob = Empty()
-			someObserver := observer.TestObserver()
+			someObserver := observer.NewTestObserver()
 			subscription := ob.Subscribe(someObserver)
 			disposedSubscription := subscription.Dispose()
 

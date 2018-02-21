@@ -1,7 +1,7 @@
 package gorx
 
 type ObservableSource interface{
-	Subscribe(observer Observer) Subscription
+	Subscribe(observer UnboundObserver) Subscription
 }
 
 type Observable interface {

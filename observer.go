@@ -1,8 +1,18 @@
 package gorx
 
+
+type UnboundObserver interface {
+	Observer
+	Bind(disposable Disposable) BoundObserver
+}
+
+type BoundObserver interface {
+	Observer
+	Unbind() UnboundObserver
+}
+
 type Observer interface {
-	OnSubscribe(disposable Disposable)
 	OnNext(element interface{})
-	OnError()
+	OnError(err error)
 	OnComplete()
 }

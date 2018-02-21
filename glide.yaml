@@ -7,6 +7,7 @@ owners:
   homepage: https://github.com/venth
 excludeDirs:
 - .idea
+import:
 testImport:
 - package: github.com/onsi/ginkgo
   version: v1.x
@@ -14,3 +15,7 @@ testImport:
   version: v1.x
 - package: gopkg.in/yaml.v2
   version: d670f9405373e636a5a2765eea47fac0c9bc91a4
+- package: github.com/golang/mock
+  version: ^1.0.0
+  subpackages:
+  - mockgen

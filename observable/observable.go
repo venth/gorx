@@ -3,14 +3,21 @@ package observable
 import (
 	"github.com/venth/gorx"
 	"github.com/venth/gorx/subscription"
+	"golang.org/x/net/html/atom"
 )
 
-type observable struct {}
+type observable struct {
+	emitter gorx.Emitter
+}
 
-func Empty() gorx.Observable {
-	return &observable{}
+func New(emitter gorx.Emitter) gorx.Observable {
+	return &observable{emitter: emitter}
 }
 
 func (o *observable) Subscribe(observer gorx.Observer) gorx.Subscription {
-	return subscription.New()
+	subscribed := subscription.NewQueuingSubscription(o.emitter, observer)
+	subscribed.Run()
+
+	//XXX correct implementation
+	return subscribed
 }
