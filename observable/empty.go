@@ -14,7 +14,7 @@ func Empty() gorx.Observable {
 	return &emptyObservable{}
 }
 
-func (o *emptyObservable) Subscribe(observer gorx.Observer) gorx.Subscription {
+func (o *emptyObservable) Subscribe(observer gorx.UnboundObserver) gorx.Subscription {
 	subscribed := &subscribedObserver{observer: observer}
 	subscribed.run()
 	return subscribed
