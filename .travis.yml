@@ -9,7 +9,9 @@ before_install:
   - tar -vxz -C $HOME/bin --strip=1 -f glide-v0.13.1-linux-amd64.tar.gz
   - export PATH="$HOME/bin:$PATH"
 
-install: glide install
+install:
+  - glide install
+  - go get github.com/golang/mock/mockgen
 
 script:
   - go generate
