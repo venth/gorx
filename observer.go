@@ -1,6 +1,8 @@
 package gorx
 
 
+//go:generate mockgen -source=./observer.go -destination=./observer_mock.go -package gorx github.com/venth/gorx
+
 type UnboundObserver interface {
 	Observer
 	Bind(disposable Disposable) BoundObserver

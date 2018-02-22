@@ -17,3 +17,7 @@ vendor
 # IntelliJ
 **.iml
 .idea
+
+# generated files
+!emitter_mock.go
+**_mock.go
