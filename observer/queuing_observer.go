@@ -1,111 +1,97 @@
 package observer
 
-import "github.com/venth/gorx"
+import (
+	"errors"
+	"fmt"
 
-func NewQueuingObserver(emitter gorx.Emitter, targetObserver gorx.UnboundObserver) gorx.UnboundObserver {
+	"github.com/venth/gorx"
+	gorx_errors "github.com/venth/gorx/errors"
+)
+
+func NewQueuingObserver(emissionObserver gorx.Observer) gorx.Observer {
 	return &queuingObserver{
-		emitter: emitter,
-		targetObserver: targetObserver,
+		emissionObserver: emissionObserver,
+		complete:         make(chan struct{}),
+		next:             make(chan interface{}),
+		err:              make(chan error),
 	}
 }
 
-type commandType int
-
-const (
-	CtNext     commandType = iota
-	CtErr
-	CtComplete
-	CtDispose
-)
-
-type emittedCommand struct {
-	emittedCommandType commandType
-	element interface{}
-}
-
-var executeCommand = map[commandType] func(interface{}, gorx.Observer) {
-	CtNext: func(element interface{}, observer gorx.Observer) {
-		observer.OnNext(element)
-	},
-	CtErr: func(err interface{}, observer gorx.Observer) {
-		observer.OnError(err.(error))
-	},
-	CtComplete: func(irrelevant interface{}, observer gorx.Observer) {
-		observer.OnComplete()
-	},
-	CtDispose: func(irrelevant interface{}, observer gorx.Observer) {
-
-	},
-}
-
-
 type queuingObserver struct {
-	emitter        gorx.Emitter
-	targetObserver gorx.UnboundObserver
+	emissionObserver gorx.Observer
+	complete         chan struct{}
+	next             chan interface{}
+	err              chan error
 }
 
-type boundQueuingObserver struct {
-	done chan struct{}
-	commands       chan *emittedCommand
-	emitter        gorx.Emitter
-	targetObserver gorx.BoundObserver
+func (o *queuingObserver) Dispose() {
+	gorx_errors.DontPanicCalling(func() {
+		close(o.complete)
+	})
+	gorx_errors.DontPanicCalling(func() {
+		close(o.err)
+	})
+	gorx_errors.DontPanicCalling(func() {
+		close(o.next)
+	})
+}
+
+func (o *queuingObserver) IsDisposed() bool {
+	select {
+	case <-o.complete:
+		return true
+	default:
+		return false
+	}
 }
 
 func (o *queuingObserver) OnNext(element interface{}) {
+	o.next <- element
 }
 
 func (o *queuingObserver) OnError(err error) {
+	o.err <- err
 }
 
 func (o *queuingObserver) OnComplete() {
+	close(o.complete)
 }
 
-func (o *queuingObserver) Bind(disposable gorx.Disposable) gorx.BoundObserver {
-	bound := &boundQueuingObserver{
-		emitter: o.emitter,
-		targetObserver: o.targetObserver.Bind(disposable),
-		commands: make(chan *emittedCommand),
-		done: make(chan struct{}),
-	}
+func (o *queuingObserver) Run() {
+	defer o.Dispose()
+	more := true
+	emissionObserver := o.emissionObserver
 
-	go bound.Run()
-
-	return bound
-}
-
-func (o *boundQueuingObserver) Run() {
-	defer close(o.commands)
-	go o.emitter(o.targetObserver)
-	o.handleEmissionQueue()
-}
-
-func (o *boundQueuingObserver) handleEmissionQueue() {
-	for {
-		cmd, more := <-o.commands
-		if more {
-			executeCommand[cmd.emittedCommandType](cmd.element, o.targetObserver)
-		} else {
+	for more {
+		select {
+		case <-o.complete:
+			emissionObserver.OnComplete()
+			more = false
 			break
+		case err := <-o.err:
+			more = o.notifyOnError(err)
+			break
+		case element := <-o.next:
+			more = o.notifyOnNext(element)
+		default:
 		}
 	}
+
+}
+func (o *queuingObserver) notifyOnNext(element interface{}) bool {
+	more := true
+	defer func() {
+		if r := recover(); r != nil {
+			more = o.notifyOnError(errors.New(fmt.Sprintf(
+				"Recovered panic in function notifyOnNext for element: %v. %v", element, r)))
+		}
+	}()
+
+	o.emissionObserver.OnNext(element)
+	return more
 }
 
-func (o *boundQueuingObserver) OnNext(element interface{}) {
-	o.commands <- &emittedCommand{emittedCommandType: CtNext, element:element}
-}
-
-func (o *boundQueuingObserver) OnError(err error) {
-	o.commands <- &emittedCommand{emittedCommandType: CtErr, element:err}
-}
-
-func (o *boundQueuingObserver) OnComplete() {
-	o.commands <- &emittedCommand{emittedCommandType: CtComplete}
-}
-
-
-func (o *boundQueuingObserver) Unbind() gorx.UnboundObserver {
-	unboundTargetObserver := o.targetObserver.Unbind()
-	close(o.done)
-
-	return &queuingObserver{emitter: o.emitter, targetObserver: unboundTargetObserver}
+func (o *queuingObserver) notifyOnError(err error) bool {
+	o.emissionObserver.OnError(err)
+	return false
 }

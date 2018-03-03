@@ -8,6 +8,11 @@ owners:
 excludeDirs:
 - .idea
 import:
+- package: github.com/sirupsen/logrus
+  version: ^1.0.4
+  subpackages:
+    - golang.org/x/crypto
+    - ssh/terminal
 testImport:
 - package: github.com/onsi/ginkgo
   version: v1.x

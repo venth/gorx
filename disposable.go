@@ -1,12 +1,10 @@
 package gorx
 
-
 type Disposable interface {
-	Dispose() Disposed
-	IsDisposed() bool
+	Dispose()
+	DisposableState
 }
 
-type Disposed interface {
+type DisposableState interface {
 	IsDisposed() bool
 }
-
