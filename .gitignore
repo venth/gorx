@@ -19,5 +19,5 @@ vendor
 .idea
 
 # generated files
-!emitter_mock.go
+!emit_sequence_mock.go
 **_mock.go
