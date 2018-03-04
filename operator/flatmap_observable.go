@@ -10,7 +10,7 @@ import (
 
 func (o *observable) FlatMap(mapFunc func(interface{}) gorx.Observable) gorx.Observable {
 	return CreateObservable(func(emissionObserver gorx.Observer, subscriptionState gorx.DisposableState) {
-		go o.Subscribe(newFlatMappingObserver(emissionObserver, mapFunc))
+		o.Subscribe(newFlatMappingObserver(emissionObserver, mapFunc))
 	})
 }
 
@@ -48,11 +48,13 @@ func (o *flatMappingObserver) OnError(err error) {
 }
 
 func (o *flatMappingObserver) OnComplete() {
-	close(o.flattenSequence)
+	observableErrors.DontPanicCalling(func() {
+		o.flattenSequence <- Empty()
+	})
 }
 
-func (o *flatMappingObserver) Run() {
-
+func (o *flatMappingObserver) OnSubscribe(emitSequence gorx.EmitSequence, subscription gorx.Disposable) {
+	emitSequence(o, subscription)
 }
 
 type flatMappingObserver struct {

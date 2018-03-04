@@ -3,40 +3,42 @@ package operator
 import (
 	"github.com/venth/gorx"
 	"github.com/venth/gorx/errors"
-	"github.com/venth/gorx/observer"
 )
 
-func newSubscribedObservable(emitSequence gorx.EmitSequence, emissionObserver gorx.Observer) (gorx.Disposable, gorx.Runnable) {
+func newSubscribedObservable(emitSequence gorx.EmitSequence, emissionObserver gorx.Observer) gorx.Disposable {
 	subscribed := &subscribedObservable{
-		emitSequence:     emitSequence,
-		emissionObserver: emissionObserver,
-		complete:         make(chan struct{}),
+		emitSequence: emitSequence,
+		Observer:     emissionObserver,
+		complete:     make(chan struct{}),
 	}
-	return subscribed, subscribed
+
+	return subscribed
 }
 
 type subscribedObservable struct {
-	emitSequence     gorx.EmitSequence
-	emissionObserver gorx.Observer
-	complete         chan struct{}
+	emitSequence gorx.EmitSequence
+	gorx.Observer
+	complete     chan struct{}
 }
 
-func (s *subscribedObservable) Run() {
-	closingObserver := s.newDisposingOnFinalStateObserver(s.emissionObserver)
-	s.emitSequence(closingObserver, s)
+func (s *subscribedObservable) OnNext(element interface{}) {
+	if !s.IsDisposed() {
+		s.Observer.OnNext(element)
+	}
 }
-func (s *subscribedObservable) newDisposingOnFinalStateObserver(emissionObserver gorx.Observer) gorx.Observer {
-	return observer.NewDelegatingObserver(
-		emissionObserver,
-		func(err error) {
-			emissionObserver.OnError(err)
-			s.Dispose()
-		},
-		func() {
-			emissionObserver.OnComplete()
-			s.Dispose()
-		},
-	)
+
+func (s *subscribedObservable) OnError(err error) {
+	if !s.IsDisposed() {
+		s.Observer.OnError(err)
+		s.Dispose()
+	}
+}
+
+func (s *subscribedObservable) OnComplete() {
+	if !s.IsDisposed() {
+		s.Observer.OnComplete()
+		s.Dispose()
+	}
 }
 
 func (s *subscribedObservable) Dispose() {
@@ -51,5 +53,13 @@ func (s *subscribedObservable) IsDisposed() bool {
 		return true
 	default:
 		return false
+	}
+}
+
+func (s *subscribedObservable) OnSubscribe(emitSequence gorx.EmitSequence, subscription gorx.Disposable) {
+	if subscribedObserver, ok := s.Observer.(gorx.SubscribedObserver); ok {
+		subscribedObserver.OnSubscribe(s.emitSequence, subscription)
+	} else {
+		s.emitSequence(s.Observer, subscription)
 	}
 }

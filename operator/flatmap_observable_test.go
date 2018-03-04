@@ -14,7 +14,7 @@ func TestObservable_FlatMap(t *testing.T) {
 	RunSpecs(t, "Observable.FlatMap suite")
 }
 
-var _ = Describe("Observable.FlatMap", func() {
+var _ = PDescribe("Observable.FlatMap", func() {
 
 	var emissionObserver *gorx.MockObserver
 	emptyObservable := CreateObservable(func(emitter gorx.Observer, state gorx.DisposableState) {

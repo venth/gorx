@@ -15,8 +15,11 @@ type observable struct {
 }
 
 func (o *observable) Subscribe(emissionObserver gorx.Observer) gorx.Disposable {
-	subscribed, subscriptionRunner := newSubscribedObservable(o.emitSequence, emissionObserver)
-	subscriptionRunner.Run()
+	subscription := newSubscribedObservable(o.emitSequence, emissionObserver)
 
-	return subscribed
+	if subscribed, ok := subscription.(gorx.SubscribedObserver); ok {
+		subscribed.OnSubscribe(o.emitSequence, subscription)
+	}
+
+	return subscription
 }

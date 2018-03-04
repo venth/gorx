@@ -9,7 +9,7 @@ type Observer interface {
 }
 
 type SubscribedObserver interface {
-	OnSubscribe(subscription Disposable)
+	OnSubscribe(emitSequence EmitSequence, subscription Disposable)
 }
 
 type EmitSequence func(Observer, DisposableState)
