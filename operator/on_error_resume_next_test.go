@@ -24,14 +24,22 @@ var _ = Describe("Operator.OnErrorResumeNext", func() {
 	mockCtrl = gomock.NewController(GinkgoT())
 	defer mockCtrl.Finish()
 
+	someResumed := "some resumed"
+	someResumedFunc := func(error) gorx.Observable { return Just(someResumed) }
+
+	someError := errors.New("some error")
+
 	Context("when emitter didn't emit any error", func() {
+
 		It("emits original elements", func() {
+			originalElement := "original element"
+
 			gomock.InOrder(
-				emissionObserver.EXPECT().OnNext("element").Times(1),
+				emissionObserver.EXPECT().OnNext(originalElement).Times(1),
 				emissionObserver.EXPECT().OnComplete().Times(1),
 			)
 
-			Just("element").OnErrorResumeNext(Just("resumed")).
+			Just(originalElement).OnErrorResumeNext(someResumedFunc).
 				Subscribe(emissionObserver)
 		})
 
@@ -44,7 +52,31 @@ var _ = Describe("Operator.OnErrorResumeNext", func() {
 		It("emits only complete as well", func() {
 			emissionObserver.EXPECT().OnComplete().Times(1)
 
-			Empty().OnErrorResumeNext(Just("resumed")).
+			Empty().OnErrorResumeNext(someResumedFunc).
+				Subscribe(emissionObserver)
+		})
+
+		BeforeEach(func() {
+			emissionObserver = gorx.NewMockObserver(mockCtrl)
+		})
+	})
+
+	Context("when emitter emits on error in middle of sequence", func() {
+		It("emits resumed sequence and continues emission of remaining elements", func() {
+			someElement := "some element"
+
+			gomock.InOrder(
+				emissionObserver.EXPECT().OnNext(someElement).Times(1),
+				emissionObserver.EXPECT().OnNext(someResumed).Times(1),
+				emissionObserver.EXPECT().OnNext(someElement).Times(1),
+				emissionObserver.EXPECT().OnComplete().Times(1),
+			)
+
+			Concat(
+				Just(someElement),
+				Error(someError),
+				Just(someElement),
+			).OnErrorResumeNext(someResumedFunc).
 				Subscribe(emissionObserver)
 		})
 
@@ -54,37 +86,35 @@ var _ = Describe("Operator.OnErrorResumeNext", func() {
 	})
 
 	Context("when emitter an error", func() {
-		someError := errors.New("some error")
-
 		It("emits resumed observed sequence, which doesn't contain errors", func() {
-			emissionObserver.EXPECT().OnError(gomock.Any()).Times(0)
-			emissionObserver.EXPECT().OnNext("resumed").Times(1)
+			resumedElement := "resumed"
+			resumedFunc := func(error) gorx.Observable { return Just(resumedElement) }
+
+			emissionObserver.EXPECT().OnNext(resumedElement).Times(1)
 			emissionObserver.EXPECT().OnComplete().Times(1)
 
 			Error(someError).
-				OnErrorResumeNext(Just("resumed")).
+				OnErrorResumeNext(resumedFunc).
 				Subscribe(emissionObserver)
 		})
 
 		It("emits resumed observed sequence, which contain error", func() {
 			resumedWithError := errors.New("resumed error")
+			resumedWithErrorFunc := func(error) gorx.Observable { return Error(resumedWithError) }
 
 			emissionObserver.EXPECT().OnError(resumedWithError).Times(1)
-			emissionObserver.EXPECT().OnNext(gomock.Any()).Times(0)
-			emissionObserver.EXPECT().OnComplete().Times(0)
 
 			Error(someError).
-				OnErrorResumeNext(Error(resumedWithError)).
+				OnErrorResumeNext(resumedWithErrorFunc).
 				Subscribe(emissionObserver)
 		})
 
 		It("completes because resumed sequence is empty", func() {
-			emissionObserver.EXPECT().OnError(gomock.Any()).Times(0)
-			emissionObserver.EXPECT().OnNext(gomock.Any()).Times(0)
 			emissionObserver.EXPECT().OnComplete().Times(1)
 
+			resumedWithEmptyFunc := func(error) gorx.Observable { return Empty() }
 			Error(someError).
-				OnErrorResumeNext(Empty()).
+				OnErrorResumeNext(resumedWithEmptyFunc).
 				Subscribe(emissionObserver)
 		})
 

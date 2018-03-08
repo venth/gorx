@@ -2,11 +2,12 @@ package operator
 
 import "github.com/venth/gorx"
 
-func (o *observable) OnErrorResumeNext(resumeObservable gorx.Observable) gorx.Observable {
+func (o *observable) OnErrorResumeNext(resumeFunc func(err error) gorx.Observable) gorx.Observable {
 	return CreateObservable(func(emissionObserver gorx.Observer, subscriptionState gorx.DisposableState) {
 		ob := &errorResumeNextObserver{
-			resumeObservable: resumeObservable,
+			resumeFunc: resumeFunc,
 			Observer: emissionObserver,
+			subscriptionState: subscriptionState,
 		}
 
 		o.Subscribe(ob)
@@ -15,9 +16,11 @@ func (o *observable) OnErrorResumeNext(resumeObservable gorx.Observable) gorx.Ob
 
 type errorResumeNextObserver struct {
 	gorx.Observer
-	resumeObservable gorx.Observable
+	resumeFunc        func(err error) gorx.Observable
+	subscriptionState gorx.DisposableState
 }
 
 func (o *errorResumeNextObserver) OnError(err error) {
-	o.Observer.OnError(err)
+	resumedObservable := o.resumeFunc(err)
+	resumedObservable.Subscribe(o.Observer)
 }
