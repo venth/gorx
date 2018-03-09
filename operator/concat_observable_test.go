@@ -59,6 +59,18 @@ var _ = Describe("Observable.Concat", func() {
 		})
 	})
 
+	Context("without observables to concatenate", func() {
+		It("emits complete", func() {
+			emissionObserver.EXPECT().OnComplete().Times(1)
+
+			Concat().Subscribe(emissionObserver)
+		})
+
+		BeforeEach(func() {
+			emissionObserver = gorx.NewMockObserver(mockCtrl)
+		})
+	})
+
 	Context("of error sequences", func() {
 		It("emits elements till error is occurred", func() {
 			someError := errors.New("some error")

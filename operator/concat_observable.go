@@ -7,22 +7,24 @@ import (
 
 func Concat(observables ...gorx.Observable) gorx.Observable {
 	return CreateObservable(func(emissionObserver gorx.Observer, subscriptionState gorx.DisposableState) {
-		completeSuppressionObserver := observer.NewDelegatingObserver(
-			emissionObserver,
-			func() {},
+		Empty().Subscribe(
+			newConcatenatingObserver(emissionObserver, 0, &observables),
 		)
-
-		for idx := 0; idx < len(observables); idx++ {
-			if subscriptionState.IsDisposed() {
-				break
-			}
-
-			sequence := observables[idx]
-			sequence.Subscribe(completeSuppressionObserver)
-		}
-
-		if !subscriptionState.IsDisposed() {
-			emissionObserver.OnComplete()
-		}
 	})
+}
+
+func newConcatenatingObserver(emissionObserver gorx.Observer, current int, observables *[]gorx.Observable) gorx.Observer {
+	return observer.NewDelegatingObserver(
+		emissionObserver,
+		func() {
+			if current < len(*observables) {
+				sequence := (*observables)[current]
+				sequence.Subscribe(
+					newConcatenatingObserver(emissionObserver, current+1, observables),
+				)
+			} else {
+				emissionObserver.OnComplete()
+			}
+		},
+	)
 }

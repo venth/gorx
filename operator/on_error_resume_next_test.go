@@ -62,13 +62,12 @@ var _ = Describe("Operator.OnErrorResumeNext", func() {
 	})
 
 	Context("when emitter emits on error in middle of sequence", func() {
-		It("emits resumed sequence and continues emission of remaining elements", func() {
+		It("emits resumed sequence and doesn't emit elements after error has occurred", func() {
 			someElement := "some element"
 
 			gomock.InOrder(
 				emissionObserver.EXPECT().OnNext(someElement).Times(1),
 				emissionObserver.EXPECT().OnNext(someResumed).Times(1),
-				emissionObserver.EXPECT().OnNext(someElement).Times(1),
 				emissionObserver.EXPECT().OnComplete().Times(1),
 			)
 
@@ -79,7 +78,7 @@ var _ = Describe("Operator.OnErrorResumeNext", func() {
 			).OnErrorResumeNext(someResumedFunc).
 				Subscribe(emissionObserver)
 		})
-
+		
 		BeforeEach(func() {
 			emissionObserver = gorx.NewMockObserver(mockCtrl)
 		})
