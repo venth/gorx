@@ -6,24 +6,12 @@ import (
 )
 
 func (o *observable) Map(mapFunc func(interface{}) interface{}) gorx.Observable {
-	return &mappingObservable{
-		mapFunc: mapFunc,
-		Observable: o,
-	}
-}
+	return CreateObservable(func(emissionObserver gorx.Observer, subscriptionState gorx.DisposableState) {
+		mappingOnNextFunc := newMappingOnNextFunc(emissionObserver, mapFunc)
 
-type mappingObservable struct {
-	mapFunc func(interface{}) interface{}
-	gorx.Observable
-}
-
-func (o *mappingObservable) Subscribe(emissionObserver gorx.Observer) gorx.Disposable {
-	var mappingOnNextFunc func(interface{})
-
-	mappingOnNextFunc = newMappingOnNextFunc(emissionObserver, o.mapFunc)
-
-	mappingObserver := observer.NewDelegatingObserver(emissionObserver, mappingOnNextFunc)
-	return o.Observable.Subscribe(mappingObserver)
+		mappingObserver := observer.NewDelegatingObserver(emissionObserver, mappingOnNextFunc)
+		o.Subscribe(mappingObserver)
+	})
 }
 
 func newMappingOnNextFunc(emitter gorx.Observer, mapFunc func(interface{}) interface{}) func(interface{}) {
