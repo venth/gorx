@@ -9,25 +9,33 @@ import (
 
 func Just(elements ... interface{}) gorx.Observable {
 	return CreateObservable(func(emissionObserver gorx.Observer, subscriptionState gorx.DisposableState) {
-		completedWithErrors := true
+		completedWithErrors := forEachElementNotifyObserver(emissionObserver, &elements, subscriptionState)
 
-		for idx := 0; idx < len(elements); idx++ {
-			element := elements[idx]
-			if subscriptionState.IsDisposed() {
-				break
-			}
-
-			if reflect.ValueOf(element).IsValid() {
-				emissionObserver.OnNext(element)
-			} else {
-				emissionObserver.OnError(errors.New("nil element passed to observable.Just"))
-				completedWithErrors = false
-				break
-			}
-
-		}
 		if completedWithErrors && !subscriptionState.IsDisposed() {
 			emissionObserver.OnComplete()
 		}
 	})
+}
+
+func forEachElementNotifyObserver(emissionObserver gorx.Observer, elements *[]interface{}, subscriptionState gorx.DisposableState) bool {
+	completedWithErrors := true
+
+	for idx := range *elements {
+		element := (*elements)[idx]
+
+		if subscriptionState.IsDisposed() {
+			break
+		}
+
+		nilPassed := !reflect.ValueOf(element).IsValid()
+		if nilPassed {
+			emissionObserver.OnError(errors.New("nil element passed to observable.Just"))
+			completedWithErrors = false
+			break
+		} else {
+			emissionObserver.OnNext(element)
+		}
+
+	}
+	return completedWithErrors
 }
