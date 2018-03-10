@@ -9,33 +9,32 @@ import (
 
 func Just(elements ... interface{}) gorx.Observable {
 	return CreateObservable(func(emissionObserver gorx.Observer, subscriptionState gorx.DisposableState) {
-		completedWithErrors := forEachElementNotifyObserver(emissionObserver, &elements, subscriptionState)
+		nilPassed := forEachElementNotifyJustObserver(&elements, subscriptionState, emissionObserver)
 
-		if completedWithErrors && !subscriptionState.IsDisposed() {
+		if !(nilPassed || subscriptionState.IsDisposed()) {
 			emissionObserver.OnComplete()
 		}
 	})
 }
 
-func forEachElementNotifyObserver(emissionObserver gorx.Observer, elements *[]interface{}, subscriptionState gorx.DisposableState) bool {
+func forEachElementNotifyJustObserver(elements *[]interface{}, subscriptionState gorx.DisposableState, emissionObserver gorx.Observer) bool {
 	completed := false
-	errorOccurred := false
-
+	nilPassed := false
 	elementsLen := len(*elements)
-	for idx := 0;  idx < elementsLen && !completed; idx++ {
+	for idx := 0; idx < elementsLen && !completed; idx++ {
 		element := (*elements)[idx]
-
-		errorOccurred = !reflect.ValueOf(element).IsValid()
-		completed = subscriptionState.IsDisposed() || errorOccurred
-
-		if errorOccurred {
-			emissionObserver.OnError(errors.New("nil element passed to observable.Just"))
-			errorOccurred = true
-			completed = true
-		} else {
-			emissionObserver.OnNext(element)
-		}
+		completed, nilPassed = notifyJustObserver(element, subscriptionState, emissionObserver)
 	}
+	return nilPassed
+}
 
-	return errorOccurred
+func notifyJustObserver(element interface{}, subscriptionState gorx.DisposableState, emissionObserver gorx.Observer) (bool, bool) {
+	nilPassed := !reflect.ValueOf(element).IsValid()
+	completed := subscriptionState.IsDisposed() || nilPassed
+	if nilPassed {
+		emissionObserver.OnError(errors.New("nil element passed to observable.Just"))
+	} else if !completed {
+		emissionObserver.OnNext(element)
+	}
+	return completed, nilPassed
 }
