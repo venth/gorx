@@ -3,11 +3,20 @@ language: go
 go:
   - 1.9
 
+env:
+  global:
+  # code climate
+    - secure: "VrY1eZu3NdGdfnzbfcTdSMZPJ1rfJMHw2JxYES7nV433bXK3+15bgAtJ2b0FRQpzPXYn4LJoOf+AZTuRN6eiONHJxUtbxymUmYNXQyMEbVmnVNEAn+gpN0QhQ1r28DHFIpIwmk/N57IChUBSw/Z8tQAL3A0nqhAU851uuSXotAWayrE9jI7oWN24s7CMYhMBlRxM4TgcpjJAwaHuIgT/piLbGFQonYT25LBwDlzrVVIggFUxU3xrGuXYF+GjO99O6YVXB2ZYOyY7Nom3k1uFWMFgEpgqPbdOD42/tn1WGOKmTs9I1w47oWuQn9wHhRIWvAL5EuiiBYwJXJYW3mGSXW6uG9i72oktTF4utckv4tqR9KeyKOGAJULVoV5U6i3D8wYbke28HZyC/qyj93ORquoLG5JkrFBsWEXnh7yIuNtBIhElXqwupoSV/NR0CZGLLBFF4JwndT20HurjSRaFlRDXkyMAsDs9ahshgAxkoBxU65nwxYLPz7d02FiHNV1WGMDB9cAnbJ2fGP8wdaltiA4CesgudAz2M3v8ZdZHhht4ROqtrNCXGycihikBZUUGw1Mo1RhVN6oHPC2R5uwx5pkV9tUs8tU2CucVSdoJMiensOmHncPC1G2r/i6qIn4jbSY0fiAra0iMUN9mLHy0oqu8vmAxuEiBrWkl50bDSnY="
+
 before_install:
   - wget "https://github.com/Masterminds/glide/releases/download/v0.13.1/glide-v0.13.1-linux-amd64.tar.gz"
   - mkdir -p $HOME/bin
   - tar -vxz -C $HOME/bin --strip=1 -f glide-v0.13.1-linux-amd64.tar.gz
   - export PATH="$HOME/bin:$PATH"
+  # code climate
+  - curl -L https://codeclimate.com/downloads/test-reporter/test-reporter-latest-linux-amd64 > ./cc-test-reporter
+  - chmod +x ./cc-test-reporter
+  - ./cc-test-reporter before-build
 
 install:
   - glide install
@@ -16,3 +25,6 @@ install:
 script:
   - go generate
   - go test -cover $(glide novendor)
+
+after_script:
+  - ./cc-test-reporter after-build --exit-code $TRAVIS_TEST_RESULT
