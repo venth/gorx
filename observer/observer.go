@@ -9,38 +9,34 @@ func NewDelegatingObserver(targetObserver gorx.Observer, handlers ...interface{}
 		delegatingOnNext(targetObserver),
 		delegatingOnError(targetObserver),
 		delegatingOnComplete(targetObserver),
-		handlers,
+		&handlers,
 	)
 }
 
 func NewObserver(handlers ...interface{}) gorx.Observer {
-	return newObserver(noopOnNext, noopOnError, noopOnComplete, handlers)
+	return newObserver(noopOnNext, noopOnError, noopOnComplete, &handlers)
 }
 
-func newObserver(nextFunc func(interface{}), errFunc func(error), completeFunc func(), handlers ...interface{}) *observer {
+func newObserver(nextFunc func(interface{}), errFunc func(error), completeFunc func(), handlers *[]interface{}) *observer {
 	o := &observer{
 		nextFunc:     nextFunc,
 		errFunc:      errFunc,
 		completeFunc: completeFunc,
 	}
 
-	if len(handlers) > 0 {
-		for _, wrappedHandlers := range handlers {
-			for _, handler := range wrappedHandlers.([]interface{}) {
-				switch handler := handler.(type) {
-				case func():
-					o.completeFunc = handler
-					break
+	for _, handler := range *handlers {
+		switch handler := handler.(type) {
+		case func():
+			o.completeFunc = handler
+			break
 
-				case func(error):
-					o.errFunc = handler
-					break
+		case func(error):
+			o.errFunc = handler
+			break
 
-				case func(interface{}):
-					o.nextFunc = handler
-					break
-				}
-			}
+		case func(interface{}):
+			o.nextFunc = handler
+			break
 		}
 	}
 	return o
