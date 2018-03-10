@@ -18,24 +18,24 @@ func Just(elements ... interface{}) gorx.Observable {
 }
 
 func forEachElementNotifyObserver(emissionObserver gorx.Observer, elements *[]interface{}, subscriptionState gorx.DisposableState) bool {
-	completedWithErrors := true
+	completed := false
+	errorOccurred := false
 
-	for idx := range *elements {
+	elementsLen := len(*elements)
+	for idx := 0;  idx < elementsLen && !completed; idx++ {
 		element := (*elements)[idx]
 
-		if subscriptionState.IsDisposed() {
-			break
-		}
+		errorOccurred = !reflect.ValueOf(element).IsValid()
+		completed = subscriptionState.IsDisposed() || errorOccurred
 
-		nilPassed := !reflect.ValueOf(element).IsValid()
-		if nilPassed {
+		if errorOccurred {
 			emissionObserver.OnError(errors.New("nil element passed to observable.Just"))
-			completedWithErrors = false
-			break
+			errorOccurred = true
+			completed = true
 		} else {
 			emissionObserver.OnNext(element)
 		}
-
 	}
-	return completedWithErrors
+
+	return errorOccurred
 }
