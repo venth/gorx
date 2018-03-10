@@ -2,6 +2,7 @@ package operator
 
 import (
 	"fmt"
+	"reflect"
 	"testing"
 
 	"github.com/golang/mock/gomock"
@@ -19,6 +20,7 @@ var _ = Describe("Observable.FlatMap", func() {
 
 	var emissionObserver *gorx.MockObserver
 	someElement := "some element"
+	someError := fmt.Errorf("some error")
 
 	mockCtrl := gomock.NewController(GinkgoT())
 	defer mockCtrl.Finish()
@@ -60,13 +62,11 @@ var _ = Describe("Observable.FlatMap", func() {
 
 	})
 
-	Context("when observable emits slices", func() {
+	Context("when observable emits", func() {
 		slice := []string{someElement, someElement, someElement}
 		Context("one slice", func() {
 			observable := Just(slice)
 			It("stops to flatten them because of an error after first element", func() {
-				someError := fmt.Errorf("some error")
-
 				flatten := observable.FlatMap(func(el interface{}) gorx.Observable {
 					return Just(someElement).ConcatWith(Error(someError)).ConcatWith(FromSlice(el))
 				})
@@ -77,10 +77,10 @@ var _ = Describe("Observable.FlatMap", func() {
 				flatten.Subscribe(emissionObserver)
 			})
 		})
+
 		Context("two slices", func() {
 			observable := Just(slice, slice)
-			It("flattens them with an error after first element", func() {
-				someError := fmt.Errorf("some error")
+			It("stops to flatten them because of an error after first element", func() {
 
 				flatten := observable.FlatMap(func(el interface{}) gorx.Observable {
 					return Just(someElement).ConcatWith(Error(someError)).ConcatWith(FromSlice(el))
@@ -93,6 +93,52 @@ var _ = Describe("Observable.FlatMap", func() {
 			})
 		})
 
+		Context("slice and error", func() {
+			observable := Just(slice).ConcatWith(Error(someError))
+			It("stops to flatten because observable emitted an error after first slice", func() {
+				flatten := observable.FlatMap(func(el interface{}) gorx.Observable {
+					return FromSlice(el)
+				})
+
+				emissionObserver.EXPECT().OnNext(someElement).Times(len(slice))
+				emissionObserver.EXPECT().OnError(someError).Times(1)
+
+				flatten.Subscribe(emissionObserver)
+			})
+		})
+
+		Context("three slices", func() {
+			observable := Just(slice, slice, slice)
+			It("flattens them", func() {
+				flatten := observable.FlatMap(func(el interface{}) gorx.Observable {
+					return FromSlice(el)
+				})
+
+				emissionObserver.EXPECT().OnNext(someElement).Times(len(slice) * 3)
+				emissionObserver.EXPECT().OnComplete().Times(1)
+
+				flatten.Subscribe(emissionObserver)
+			})
+		})
+
+		Context("three slices", func() {
+			errorSlice := []string{"error slice", "error slice", "error slice", "error slice"}
+			observable := Just(slice, errorSlice, slice)
+			It("stops to flatten because during flattening of second element an error occurred", func() {
+				flatten := observable.FlatMap(func(el interface{}) gorx.Observable {
+					if reflect.DeepEqual(el, slice) {
+						return FromSlice(el)
+					} else {
+						return Error(someError)
+					}
+				})
+
+				emissionObserver.EXPECT().OnNext(someElement).Times(len(slice) * 3)
+				emissionObserver.EXPECT().OnError(someError)
+
+				flatten.Subscribe(emissionObserver)
+			})
+		})
 
 		BeforeEach(func() {
 			emissionObserver = gorx.NewMockObserver(mockCtrl)
