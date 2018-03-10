@@ -1,7 +1,7 @@
 language: go
 
 go:
-  - 1.9
+  - "1.10"
 
 env:
   global:
@@ -24,19 +24,7 @@ install:
 
 script:
   - go generate
-  - |
-    echo "mode: set" > c.out
-    for Dir in $(find ./* -maxdepth 10 -type d );
-    do
-            if ls $Dir/*.go &> /dev/null;
-            then
-                go test -cover $(glide novendor) -coverprofile=profile.out $Dir
-                if [ -f profile.out ]
-                then
-                    cat profile.out | grep -v "mode: set" >> c.out
-                fi
-    fi
-    done
+  - go test -cover $(glide novendor) -coverprofile c.out
 
 after_script:
   - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
