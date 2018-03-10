@@ -7,7 +7,7 @@ import (
 	"github.com/venth/gorx"
 )
 
-func Just(elements ... interface{}) gorx.Observable {
+func Just(elements ...interface{}) gorx.Observable {
 	return CreateObservable(func(emissionObserver gorx.Observer, subscriptionState gorx.DisposableState) {
 		nilPassed := forEachElementNotifyJustObserver(&elements, subscriptionState, emissionObserver)
 

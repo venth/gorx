@@ -18,7 +18,7 @@ func newSubscribedObservable(emitSequence gorx.EmitSequence, emissionObserver go
 type subscribedObservable struct {
 	emitSequence gorx.EmitSequence
 	gorx.Observer
-	complete     chan struct{}
+	complete chan struct{}
 }
 
 func (s *subscribedObservable) OnNext(element interface{}) {

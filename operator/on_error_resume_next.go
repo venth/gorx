@@ -5,8 +5,8 @@ import "github.com/venth/gorx"
 func (o *observable) OnErrorResumeNext(resumeFunc func(err error) gorx.Observable) gorx.Observable {
 	return CreateObservable(func(emissionObserver gorx.Observer, subscriptionState gorx.DisposableState) {
 		ob := &errorResumeNextObserver{
-			resumeFunc: resumeFunc,
-			Observer: emissionObserver,
+			resumeFunc:        resumeFunc,
+			Observer:          emissionObserver,
 			subscriptionState: subscriptionState,
 		}
 

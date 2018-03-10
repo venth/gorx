@@ -126,7 +126,7 @@ var _ = Describe("Observable.Concat", func() {
 				Just(element5),
 				Just(element6),
 			).
-					Subscribe(emissionObserver)
+				Subscribe(emissionObserver)
 		})
 
 		BeforeEach(func() {

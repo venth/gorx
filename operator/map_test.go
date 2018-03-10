@@ -37,7 +37,7 @@ var _ = Describe("Observable.Map", func() {
 			observable.Map(func(el interface{}) interface{} {
 				return mappedElement + el.(string)
 			}).
-			Subscribe(emissionObserver)
+				Subscribe(emissionObserver)
 		})
 
 		BeforeEach(func() {

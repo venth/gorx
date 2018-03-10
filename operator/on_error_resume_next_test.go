@@ -78,7 +78,7 @@ var _ = Describe("Operator.OnErrorResumeNext", func() {
 			).OnErrorResumeNext(someResumedFunc).
 				Subscribe(emissionObserver)
 		})
-		
+
 		BeforeEach(func() {
 			emissionObserver = gorx.NewMockObserver(mockCtrl)
 		})

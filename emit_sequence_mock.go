@@ -1,6 +1,5 @@
 package gorx
 
-
 type notifiable interface {
 	notify(observer Observer)
 }
@@ -9,7 +8,7 @@ type nextEmission struct {
 	element interface{}
 }
 
-func (e *nextEmission) notify(observer Observer)  {
+func (e *nextEmission) notify(observer Observer) {
 	observer.OnNext(e.element)
 }
 
@@ -17,17 +16,15 @@ type errorEmission struct {
 	err error
 }
 
-func (e *errorEmission) notify(observer Observer)  {
+func (e *errorEmission) notify(observer Observer) {
 	observer.OnError(e.err)
 }
 
+type completeEmission struct{}
 
-type completeEmission struct {}
-
-func (e *completeEmission) notify(observer Observer)  {
+func (e *completeEmission) notify(observer Observer) {
 	observer.OnComplete()
 }
-
 
 type EmitterBuilder interface {
 	EmitNext(el string) EmitterBuilder
