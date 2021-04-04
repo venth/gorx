@@ -3,16 +3,8 @@ package operator
 import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/venth/gorx"
-
-	"testing"
 )
-
-func TestObservable_Map(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Observable.Map suite")
-}
 
 var _ = Describe("Observable.Map", func() {
 	mockCtrl := gomock.NewController(GinkgoT())

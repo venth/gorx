@@ -2,18 +2,11 @@ package operator
 
 import (
 	"errors"
-	"testing"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/venth/gorx"
 )
-
-func TestObservable_Error(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Observable.Error suite")
-}
 
 var _ = Describe("Observable.Error", func() {
 	var (

@@ -3,16 +3,8 @@ package operator
 import (
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/venth/gorx"
-
-	"testing"
 )
-
-func TestObservable_Empty(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Observable.Empty suite")
-}
 
 var _ = Describe("Observable.Empty", func() {
 	var (

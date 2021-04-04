@@ -1,18 +1,10 @@
 package operator
 
 import (
-	"testing"
-
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/venth/gorx"
 )
-
-func TestOperator_ConcatWith(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Operator.ConcatWith suite")
-}
 
 var _ = Describe("Operator.ConcatWith", func() {
 	var (

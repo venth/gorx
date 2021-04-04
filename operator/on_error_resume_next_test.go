@@ -2,18 +2,11 @@ package operator
 
 import (
 	"errors"
-	"testing"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/venth/gorx"
 )
-
-func TestOperator_OnErrorResumeNext(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Operator.OnErrorResumeNext suite")
-}
 
 var _ = Describe("Operator.OnErrorResumeNext", func() {
 	var (

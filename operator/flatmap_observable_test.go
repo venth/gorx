@@ -3,18 +3,11 @@ package operator
 import (
 	"fmt"
 	"reflect"
-	"testing"
 
 	"github.com/golang/mock/gomock"
 	. "github.com/onsi/ginkgo"
-	. "github.com/onsi/gomega"
 	"github.com/venth/gorx"
 )
-
-func TestObservable_FlatMap(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Observable.FlatMap suite")
-}
 
 var _ = Describe("Observable.FlatMap", func() {
 
@@ -47,8 +40,8 @@ var _ = Describe("Observable.FlatMap", func() {
 		It("flattens them", func() {
 			flatten := Just(someElement, someElement).
 				FlatMap(func(el interface{}) gorx.Observable {
-				return Just(el)
-			})
+					return Just(el)
+				})
 
 			emissionObserver.EXPECT().OnNext(someElement).Times(2)
 			emissionObserver.EXPECT().OnComplete().Times(1)
