@@ -19,7 +19,7 @@ install:
 
 script:
   - go generate
-  - go test -cover -coverprofile c.out
+  - go test ./... -cover -coverprofile c.out
 
 after_script:
   - ./cc-test-reporter after-build --coverage-input-type gocov --exit-code $TRAVIS_TEST_RESULT
